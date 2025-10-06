@@ -6,7 +6,7 @@ mcp = FastMCP("support-assistant")
 @mcp.tool()
 def tool_get_ticket(ticket_id: str):
     """Fetch a support ticket by ID."""
-    return backend.customers_dbget_ticket(ticket_id)
+    return backend.get_ticket(ticket_id)
 
 @mcp.tool()
 def tool_update_ticket(ticket_id: str, status: str | None = None, assignee: str | None = None):
