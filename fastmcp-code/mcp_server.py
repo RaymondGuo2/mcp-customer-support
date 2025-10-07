@@ -1,5 +1,6 @@
 from fastmcp import FastMCP
-import backend
+from . import backend
+from data import datamodel
 
 mcp = FastMCP("support-assistant")
 

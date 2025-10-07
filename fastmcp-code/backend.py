@@ -1,107 +1,36 @@
 from pydantic import BaseModel
 from typing import Optional, List
-
-# -----------------------------
-# Mock databases
-# -----------------------------
-
-tickets_db = {
-    "T123": {
-        "id": "T123",
-        "subject": "Login issue",
-        "body": "I can't log in",
-        "status": "open",
-        "priority": "low",
-        "assignee": "support_agent_1",
-        "customer_id": "C001"
-    }
-}
-
-customers_db = {
-    "C001": {
-        "id": "C001",
-        "name": "Alice Johnson",
-        "email": "alice@example.com",
-        "plan": "Premium"
-    }
-}
-
-faq_db = [
-    {"question": "How do I reset my password?", "answer": "Click 'Forgot Password' on the login page."},
-    {"question": "Why can't I log in?", "answer": "Check if your password is correct or reset it."},
-    {"question": "How to contact support?", "answer": "You can email us at support@example.com."}
-]
-
-# -----------------------------
-# Models
-# -----------------------------
-
-class Ticket(BaseModel):
-    id: str
-    subject: str
-    body: str
-    status: str
-    priority: str
-    assignee: Optional[str] = None
-    customer_id: Optional[str] = None
-
-
-class UpdateTicketRequest(BaseModel):
-    status: Optional[str] = None
-    assignee: Optional[str] = None
-
-
-class UpdateTicketResponse(BaseModel):
-    success: bool
-    message: str
-    ticket: Optional[Ticket] = None
-
-
-class Customer(BaseModel):
-    id: str
-    name: str
-    email: str
-    plan: str
-
-
-class FAQItem(BaseModel):
-    question: str
-    answer: str
-
-
-class SuggestedResponse(BaseModel):
-    ticket_id: str
-    suggested_text: str
+from data import datamodel
 
 # -----------------------------
 # Functions
 # -----------------------------
 
 def get_ticket(ticket_id: str):
-    ticket = tickets_db.get(ticket_id)
+    ticket = datamodel.tickets_db.get(ticket_id)
     if not ticket:
-        return Ticket(id=ticket_id, subject="", body="Not found", status="missing", priority="low")
+        return datamodel.Ticket(id=ticket_id, subject="", body="Not found", status="missing", priority="low")
     return ticket
 
 
-def update_ticket(ticket_id: str, update: UpdateTicketRequest):
+def update_ticket(ticket_id: str, update: datamodel.UpdateTicketRequest):
     """Update a ticket’s status or assignee."""
-    ticket = tickets_db.get(ticket_id)
+    ticket = datamodel.tickets_db.get(ticket_id)
     if not ticket:
-        return UpdateTicketResponse(success=False, message="Ticket not found")
+        return datamodel.UpdateTicketResponse(success=False, message="Ticket not found")
 
     if update.status:
         ticket["status"] = update.status
     if update.assignee:
         ticket["assignee"] = update.assignee
 
-    return UpdateTicketResponse(success=True, message="Updated successfully", ticket=ticket)
+    return datamodel.UpdateTicketResponse(success=True, message="Updated successfully", ticket=ticket)
 
 def suggest_response(ticket_id: str):
     """Suggest an automated response for a ticket."""
-    ticket = tickets_db.get(ticket_id)
+    ticket = datamodel.tickets_db.get(ticket_id)
     if not ticket:
-        return SuggestedResponse(ticket_id=ticket_id, suggested_text="Ticket not found.")
+        return datamodel.SuggestedResponse(ticket_id=ticket_id, suggested_text="Ticket not found.")
 
     # Naive suggestion logic (replace with LLM in production)
     body = ticket["body"].lower()
@@ -112,20 +41,20 @@ def suggest_response(ticket_id: str):
     else:
         suggestion = "Thank you for reaching out! Our support team will respond shortly."
 
-    return SuggestedResponse(ticket_id=ticket_id, suggested_text=suggestion)
+    return datamodel.SuggestedResponse(ticket_id=ticket_id, suggested_text=suggestion)
 
 def get_customer(customer_id: str):
     """Retrieve customer information."""
-    customer = customers_db.get(customer_id)
+    customer = datamodel.customers_db.get(customer_id)
     if not customer:
-        return Customer(id=customer_id, name="Unknown", email="unknown@example.com", plan="Free")
+        return datamodel.Customer(id=customer_id, name="Unknown", email="unknown@example.com", plan="Free")
     return customer
 
-def search_faq(q: str) -> List[FAQItem]:
+def search_faq(q: str) -> List[datamodel.FAQItem]:
     """Search FAQs for a given query string."""
     results = [
-        FAQItem(**f)
-        for f in faq_db
+        datamodel.FAQItem(**f)
+        for f in datamodel.faq_db
         if q.lower() in f["question"].lower() or q.lower() in f["answer"].lower()
     ]
     return results
