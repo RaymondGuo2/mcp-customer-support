@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Query
 from fastapi_mcp import FastApiMCP
-from pydantic import BaseModel
-from typing import Optional, List
+from typing import List
+import sys,os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from data import datamodel
 
 # -----------------------------
@@ -9,14 +10,18 @@ from data import datamodel
 # -----------------------------
 
 app = FastAPI()
-mcp = FastApiMCP(app, name="support-assistant-fastapi")
+mcp = FastApiMCP(
+    app, 
+    name="support-assistant-fastapi",
+    include_operations=["get_ticket", "update_ticket", "suggest_response","get_customer", "search_faq"]
+    )
 mcp.mount()
 
 # -----------------------------
 # Endpoints
 # -----------------------------
 
-@app.get("/tickets/{ticket_id}", response_model=datamodel.Ticket)
+@app.get("/tickets/{ticket_id}", response_model=datamodel.Ticket, operation_id="get_ticket")
 async def get_ticket(ticket_id: str):
     """Fetch a ticket by ID."""
     ticket = datamodel.tickets_db.get(ticket_id)
@@ -25,7 +30,7 @@ async def get_ticket(ticket_id: str):
     return ticket
 
 
-@app.post("/tickets/{ticket_id}/actions/update", response_model=datamodel.UpdateTicketResponse)
+@app.post("/tickets/{ticket_id}/actions/update", response_model=datamodel.UpdateTicketResponse, operation_id="update_ticket")
 async def update_ticket(ticket_id: str, update: datamodel.UpdateTicketRequest):
     """Update a ticket’s status or assignee."""
     ticket = datamodel.tickets_db.get(ticket_id)
@@ -40,7 +45,7 @@ async def update_ticket(ticket_id: str, update: datamodel.UpdateTicketRequest):
     return datamodel.UpdateTicketResponse(success=True, message="Updated successfully", ticket=ticket)
 
 
-@app.post("/tickets/{ticket_id}/actions/suggest_response", response_model=datamodel.SuggestedResponse)
+@app.post("/tickets/{ticket_id}/actions/suggest_response", response_model=datamodel.SuggestedResponse, operation_id="suggest_response")
 async def suggest_response(ticket_id: str):
     """Suggest an automated response for a ticket."""
     ticket = datamodel.tickets_db.get(ticket_id)
@@ -59,7 +64,7 @@ async def suggest_response(ticket_id: str):
     return datamodel.SuggestedResponse(ticket_id=ticket_id, suggested_text=suggestion)
 
 
-@app.get("/customers/{customer_id}", response_model=datamodel.Customer)
+@app.get("/customers/{customer_id}", response_model=datamodel.Customer, operation_id="get_customer")
 async def get_customer(customer_id: str):
     """Retrieve customer information."""
     customer = datamodel.customers_db.get(customer_id)
@@ -68,8 +73,19 @@ async def get_customer(customer_id: str):
     return customer
 
 
-@app.get("/faq/search", response_model=List[datamodel.FAQItem])
+@app.get("/faq/search", response_model=List[datamodel.FAQItem], operation_id="search_faq")
 async def search_faq(q: str = Query(..., description="Search query for FAQ")):
     """Search FAQs for a given query string."""
     results = [f for f in datamodel.faq_db if q.lower() in f["question"].lower() or q.lower() in f["answer"].lower()]
     return results
+
+
+# -----------------------------
+# Launch Script
+# -----------------------------
+
+# file: run_mcp_server.py
+import uvicorn
+
+if __name__ == "__main__":
+    uvicorn.run("fastapi-mcp-code.app:app", host="127.0.0.1", port=8000)
