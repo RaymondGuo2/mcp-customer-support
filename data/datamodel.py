@@ -8,7 +8,7 @@ tickets_db = {
     "T123": {
         "id": "T123",
         "subject": "Login issue",
-        "body": "I can't log in",
+        "body": "I can't login",
         "status": "open",
         "priority": "low",
         "assignee": "support_agent_1",
