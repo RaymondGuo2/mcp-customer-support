@@ -15,7 +15,7 @@ app = FastAPI(title="Customer Support Assistnat")
 # Endpoints
 # -----------------------------
 
-@app.get("/tickets/{ticket_id}", name="get_tickets", response_model=datamodel.Ticket)
+@app.get("/tickets/{ticket_id}", operation_id="get_ticket", response_model=datamodel.Ticket)
 async def get_ticket(ticket_id: str):
     """Fetch a ticket by ID."""
     ticket = datamodel.tickets_db.get(ticket_id)
@@ -24,7 +24,7 @@ async def get_ticket(ticket_id: str):
     return ticket
 
 
-@app.post("/tickets/{ticket_id}/actions/update",name="update_tickets", response_model=datamodel.UpdateTicketResponse)
+@app.post("/tickets/{ticket_id}/actions/update",operation_id="update_ticket", response_model=datamodel.UpdateTicketResponse)
 async def update_ticket(ticket_id: str, update: datamodel.UpdateTicketRequest):
     """Update a ticket’s status or assignee."""
     ticket = datamodel.tickets_db.get(ticket_id)
@@ -39,7 +39,7 @@ async def update_ticket(ticket_id: str, update: datamodel.UpdateTicketRequest):
     return datamodel.UpdateTicketResponse(success=True, message="Updated successfully", ticket=ticket)
 
 
-@app.post("/tickets/{ticket_id}/actions/suggest_response", name="suggest_response", response_model=datamodel.SuggestedResponse)
+@app.post("/tickets/{ticket_id}/actions/suggest_response", operation_id="suggest_response", response_model=datamodel.SuggestedResponse)
 async def suggest_response(ticket_id: str):
     """Suggest an automated response for a ticket."""
     ticket = datamodel.tickets_db.get(ticket_id)
@@ -58,7 +58,7 @@ async def suggest_response(ticket_id: str):
     return datamodel.SuggestedResponse(ticket_id=ticket_id, suggested_text=suggestion)
 
 
-@app.get("/customers/{customer_id}", name="get_customers",response_model=datamodel.Customer)
+@app.get("/customers/{customer_id}", operation_id="get_customer",response_model=datamodel.Customer)
 async def get_customer(customer_id: str):
     """Retrieve customer information."""
     customer = datamodel.customers_db.get(customer_id)
@@ -67,7 +67,7 @@ async def get_customer(customer_id: str):
     return customer
 
 
-@app.get("/faq/search", name="search_faqs", response_model=List[datamodel.FAQItem])
+@app.get("/faq/search", operation_id="search_faq", response_model=List[datamodel.FAQItem])
 async def search_faq(q: str = Query(..., description="Search query for FAQ")):
     """Search FAQs for a given query string."""
     results = [f for f in datamodel.faq_db if q.lower() in f["question"].lower() or q.lower() in f["answer"].lower()]
@@ -76,7 +76,8 @@ async def search_faq(q: str = Query(..., description="Search query for FAQ")):
 
 mcp = FastApiMCP(
     app, 
-    name="support-assistant-fastapi"
+    name="support-assistant-fastapi",
+    include_operations=["get_ticket", "update_ticket", "suggest_response","get_customer", "search_faq"]
 )
 mcp.mount()
 
