@@ -19,7 +19,7 @@ allowed_tools = [
     "tool_search_faq"
 ]
 
-ngrok_url = "https://uncombinative-unprotesting-anders.ngrok-free.dev"
+ngrok_url = os.getenv("NGROK_URL")
 server_url = f"{ngrok_url}/mcp"
 
 class MCPClient:
